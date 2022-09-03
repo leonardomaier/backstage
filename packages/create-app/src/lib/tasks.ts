@@ -209,6 +209,31 @@ export async function buildAppTask(appDir: string) {
   await runCmd('yarn tsc');
 }
 
+export async function initGitRepository(tempDir: string, context: any) {
+  
+  const runCmd = async (cmd: string) => {
+    let cmdResponse = { stdout: '', stderr: '' }
+    await Task.forItem('executing', cmd, async () => {
+      process.chdir(tempDir);
+      cmdResponse = await exec(cmd).catch(error => {
+        process.stdout.write(error.stderr);
+        process.stdout.write(error.stdout);
+        throw new Error(`Could not execute command ${chalk.cyan(cmd)}`);
+      });
+    });
+    return cmdResponse
+  }
+  
+  await runCmd('git init');
+  await runCmd('touch README.md')
+  await runCmd('git add .')
+  await runCmd('git commit -m "Initial commit"')
+
+  const defaultBranch = await runCmd('git branch --format="%(refname:short)"')
+
+  context.defaultBranch = defaultBranch.stdout.trim() || 'master'
+}
+
 /**
  * Move temporary directory to destination application folder
  *
