@@ -44,6 +44,7 @@ const checkPathExistsMock = jest.spyOn(tasks, 'checkPathExistsTask');
 const templatingMock = jest.spyOn(tasks, 'templatingTask');
 const checkAppExistsMock = jest.spyOn(tasks, 'checkAppExistsTask');
 const initGitRepositoryMock = jest.spyOn(tasks, 'initGitRepository');
+const checkForGitSetup = jest.spyOn(tasks, 'checkForGitSetup');
 const createTemporaryAppFolderMock = jest.spyOn(
   tasks,
   'createTemporaryAppFolderTask',
@@ -68,6 +69,7 @@ describe('command entrypoint', () => {
       name: 'MyApp',
       dbType: 'PostgreSQL',
     });
+    checkForGitSetup.mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -98,5 +100,12 @@ describe('command entrypoint', () => {
     const cmd = { skipInstall: true } as unknown as Command;
     await createApp(cmd);
     expect(buildAppMock).not.toHaveBeenCalled();
+  });
+
+  it('should not call `initGitRepository` when `isGitConfigured` is false', async () => {
+    const cmd = {} as unknown as Command;
+    checkForGitSetup.mockResolvedValue(false);
+    await createApp(cmd);
+    expect(initGitRepositoryMock).not.toHaveBeenCalled();
   });
 });
